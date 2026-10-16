@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- The selected cell shows its whole output; the others still show their
+  first lines. Outputs up to 20,000 characters reach the panel (was 4,000).
+- `pgup` / `pgdn` scroll the panel, for long outputs.
+
 ## 0.1.0
 
 First release.

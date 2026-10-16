@@ -152,6 +152,8 @@ const plugin: Plugin.Definition = {
           { title: "Interrupt", group: "Notebook", bind: "i", run: () => act("interrupt") },
           { title: "Restart kernel", group: "Notebook", bind: "k", run: () => act("restart") },
           { title: "Open plot", group: "Notebook", bind: "o", run: openPlot },
+          { title: "Scroll up", group: "Notebook", bind: "pageup", run: () => page(-1) },
+          { title: "Scroll down", group: "Notebook", bind: "pagedown", run: () => page(1) },
           { title: "Reload file", group: "Notebook", bind: "f5", run: () => void refresh() },
           { title: "Close notebook", group: "Notebook", bind: "escape", run: () => ctx.ui.panel.close() },
         ],
@@ -159,6 +161,7 @@ const plugin: Plugin.Definition = {
       // keys work straight away; ctrl+x ← goes back to the chat. OpenCode may hand
       // focus back to the prompt after the slash command, so ask again briefly.
       for (const ms of [0, 60, 200, 500]) setTimeout(() => !props.input.focused && props.input.focus(), ms)
+      const page = (direction: number) => scroll?.scrollBy?.(direction * Math.max(5, (scroll?.height ?? 20) - 3))
       const reveal = () => setTimeout(() => scroll?.scrollChildIntoView?.(`nb-cell-${selected()}`))
       void refresh()
 
@@ -200,7 +203,7 @@ const plugin: Plugin.Definition = {
                   <For each={cell.outputs}>
                     {(out) => (
                       <>
-                        <For each={clipLines(out.kind === "image" && !pixels() ? `${out.text} · o opens it` : out.text)}>
+                        <For each={clipLines(out.kind === "image" && !pixels() ? `${out.text} · o opens it` : out.text, cell.index === selected())}>
                           {(line) => <text fg={out.kind === "error" ? theme.text.feedback.error.base : theme.text.base}>{`       ${line}`}</text>}
                         </For>
                         {/* only where the terminal draws real pixels; coloured blocks are too coarse for a plot */}
@@ -220,16 +223,17 @@ const plugin: Plugin.Definition = {
             <text fg={theme.text.muted}>
               {focused() ? "↑↓ cell · r run · a all · space mark · i stop · k restart · o plot · esc close" : "ctrl+x → to use the notebook keys"}
             </text>
-            <text fg={theme.text.muted}>{[focused() ? "ctrl+x ← chat" : "", snap()?.ipynb ? `saved: ${snap()!.ipynb}` : ""].filter(Boolean).join(" · ")}</text>
+            <text fg={theme.text.muted}>{[focused() ? "pgup/pgdn scroll · ctrl+x ← chat" : "", snap()?.ipynb ? `saved: ${snap()!.ipynb}` : ""].filter(Boolean).join(" · ")}</text>
           </box>
         </box>
       )
     }
 
-    function clipLines(text: string): string[] {
+    // the selected cell shows its whole output; the others their first lines
+    function clipLines(text: string, full = false): string[] {
       const lines = text.split("\n")
-      if (lines.length <= MAX_OUTPUT_LINES) return lines
-      return [...lines.slice(0, MAX_OUTPUT_LINES - 1), `… ${lines.length - MAX_OUTPUT_LINES + 1} more lines (full output in the .ipynb)`]
+      if (full || lines.length <= MAX_OUTPUT_LINES) return lines
+      return [...lines.slice(0, MAX_OUTPUT_LINES - 1), `… ${lines.length - MAX_OUTPUT_LINES + 1} more lines (select the cell to see them all)`]
     }
   },
 }
