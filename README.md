@@ -37,16 +37,30 @@ which starts the kernel with the packages each notebook asks for.
 
 ## Install
 
-Add the plugin to `opencode.json`, either your global
-`~/.config/opencode/opencode.json` or a project's, pinned to a release:
+Clone a release into a project's `.opencode/plugins/` folder; OpenCode loads
+plugins from there by itself:
 
-```json
-{ "plugins": ["github:dskanakoglou/opencode-notebook#v0.1.0"] }
+```bash
+git clone -q --depth 1 --branch v0.1.0 https://github.com/dskanakoglou/opencode-notebook .opencode/plugins/opencode-notebook
 ```
 
-OpenCode downloads it on the next launch. The first notebook you run downloads
-Jupyter's kernel packages and the ones the notebook lists (about 400 MB with
-pandas and matplotlib) into uv's cache; after that a kernel starts in seconds.
+For every project, clone it anywhere and list the folder in your global
+`~/.config/opencode/opencode.json`:
+
+```json
+{ "plugins": ["/absolute/path/to/opencode-notebook"] }
+```
+
+Restart OpenCode afterwards. Nothing needs building or `npm install`; OpenCode
+compiles the plugin itself.
+
+**Not with a `github:` entry for now.** On OpenCode 2.0.29 a plugin installed
+as `"github:dskanakoglou/opencode-notebook#v0.1.0"` loads, but its panel is
+drawn once and never updates. Loaded from a folder it works.
+
+The first notebook you run downloads Jupyter's kernel packages and the ones the
+notebook lists (about 400 MB with pandas and matplotlib) into uv's cache; after
+that a kernel starts in seconds.
 
 ## A notebook is a `.py` file
 
@@ -120,7 +134,7 @@ On an object entry in `opencode.json`:
 ```json
 {
   "plugins": [
-    { "package": "github:dskanakoglou/opencode-notebook#v0.1.0", "options": { "roots": ["outputs", "analysis"] } }
+    { "package": "/absolute/path/to/opencode-notebook", "options": { "roots": ["outputs", "analysis"] } }
   ]
 }
 ```
@@ -162,7 +176,7 @@ npm test        # unit tests
 npm run check   # type check
 ```
 
-For a local copy, list the folder in a project's `opencode.json`:
+Point a test project's `opencode.json` at your working copy:
 `{ "plugins": ["/absolute/path/to/opencode-notebook"] }`.
 
 ## License
