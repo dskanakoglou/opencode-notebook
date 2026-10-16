@@ -156,8 +156,9 @@ const plugin: Plugin.Definition = {
           { title: "Close notebook", group: "Notebook", bind: "escape", run: () => ctx.ui.panel.close() },
         ],
       }))
-      // keys work straight away; ctrl+x ← goes back to the chat
-      setTimeout(() => props.input.focus())
+      // keys work straight away; ctrl+x ← goes back to the chat. OpenCode may hand
+      // focus back to the prompt after the slash command, so ask again briefly.
+      for (const ms of [0, 60, 200, 500]) setTimeout(() => !props.input.focused && props.input.focus(), ms)
       const reveal = () => setTimeout(() => scroll?.scrollChildIntoView?.(`nb-cell-${selected()}`))
       void refresh()
 
