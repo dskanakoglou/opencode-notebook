@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2
+
+- Text cells (`# %% [markdown]`) are shown in full in the panel, so a
+  notebook can explain itself step by step.
+- Every code cell shows its code above its output: the first lines, or all of
+  it when selected.
+
 ## 0.1.1
 
 - The selected cell shows its whole output; the others still show their

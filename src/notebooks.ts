@@ -54,6 +54,7 @@ export interface Snapshot {
   cells: {
     index: number
     kind: "code" | "markdown"
+    title: string
     label: string
     source: string
     status: CellStatus
@@ -162,6 +163,7 @@ export class Notebooks {
         return {
           index: cell.index,
           kind: cell.kind,
+          title: cell.title,
           label: cellLabel(cell),
           source: cell.source,
           status: r?.status ?? "idle",

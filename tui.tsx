@@ -12,6 +12,7 @@ import { plotMode, terminalLine, type Capabilities } from "./src/terminal.ts"
 const PANEL = "notebook"
 const ICON: Record<string, string> = { idle: " ", queued: "…", running: "◐", ok: "✓", error: "✗", cancelled: "-" }
 const MAX_OUTPUT_LINES = 12
+const MAX_CODE_LINES = 6
 const PLOT_ROWS = 18
 
 type Cell = Snapshot["cells"][number]
@@ -195,10 +196,14 @@ const plugin: Plugin.Definition = {
                     fg={cell.index === selected() ? (theme.text.action.primary.selected ?? theme.text.action.primary.base) : statusColor(cell)}
                     bg={cell.index === selected() ? theme.background.raised.high : undefined}
                   >
-                    {`${cell.index === selected() ? "▸" : " "}${cell.marked ? "●" : " "}${cell.kind === "markdown" ? "  md" : `[${cell.count ?? " "}]`.padStart(4)} ${ICON[cell.status]} ${cell.label}${cell.stale ? "  (edited since run)" : ""}`}
+                    {`${cell.index === selected() ? "▸" : " "}${cell.marked ? "●" : " "}${cell.kind === "markdown" ? `  md ${cell.title ?? ""}` : `${`[${cell.count ?? " "}]`.padStart(4)} ${ICON[cell.status]} ${cell.label}`}${cell.stale ? "  (edited since run)" : ""}`}
                   </text>
-                  <Show when={cell.kind === "code" && cell.index === selected()}>
-                    <For each={cell.source.split("\n").slice(0, 20)}>{(line) => <text fg={theme.text.muted}>{`       ${line}`}</text>}</For>
+                  {/* text cells in full; code (the input) for every cell, all of it when selected */}
+                  <Show when={cell.kind === "markdown"}>
+                    <For each={cell.source.split("\n")}>{(line) => <text fg={theme.text.base}>{`       ${line}`}</text>}</For>
+                  </Show>
+                  <Show when={cell.kind === "code"}>
+                    <For each={codeLines(cell.source, cell.index === selected())}>{(line) => <text fg={theme.text.muted}>{`       │ ${line}`}</text>}</For>
                   </Show>
                   <For each={cell.outputs}>
                     {(out) => (
@@ -227,6 +232,12 @@ const plugin: Plugin.Definition = {
           </box>
         </box>
       )
+    }
+
+    function codeLines(source: string, full: boolean): string[] {
+      const lines = source.split("\n")
+      if (full || lines.length <= MAX_CODE_LINES) return lines
+      return [...lines.slice(0, MAX_CODE_LINES - 1), `… ${lines.length - MAX_CODE_LINES + 1} more lines`]
     }
 
     // the selected cell shows its whole output; the others their first lines
