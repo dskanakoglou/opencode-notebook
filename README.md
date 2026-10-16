@@ -44,6 +44,9 @@ plugins from there by itself:
 git clone -q --depth 1 --branch v0.1.0 https://github.com/dskanakoglou/opencode-notebook .opencode/plugins/opencode-notebook
 ```
 
+Git notes that the tag "is not a commit" and that you are on a "detached
+HEAD"; both are expected when cloning a release.
+
 For every project, clone it anywhere and list the folder in your global
 `~/.config/opencode/opencode.json`:
 
