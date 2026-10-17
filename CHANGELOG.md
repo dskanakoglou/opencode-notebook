@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.6
+
+- The arrow keys, Enter and mouse clicks select only cells that can run;
+  text cells are passed over. A notebook of text alone still moves through it.
+- A text cell without a title shows only its text, with no empty line above it.
+
 ## 0.1.5
 
 - `/notebook` is described as "Open a notebook next to the chat" in the command

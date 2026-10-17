@@ -96,11 +96,15 @@ const plugin: Plugin.Definition = {
       const p = path()
       if (p) rpc.mark({ path: p, cell: selected() }, where()).catch((e: any) => toast(e?.message ?? String(e), "error"))
     }
+    // the arrows stop only on cells that can run; a notebook of text alone still moves through its text
+    const selectable = () => {
+      const all = snap()?.cells ?? []
+      return all.some((c) => c.kind === "code") ? all.filter((c) => c.kind === "code") : all
+    }
     const move = (step: number) => {
-      const cells = snap()?.cells ?? []
-      if (!cells.length) return
-      const at = Math.max(0, cells.findIndex((c) => c.index === selected()))
-      setSelected(cells[Math.min(cells.length - 1, Math.max(0, at + step))].index)
+      const cells = selectable()
+      const next = step > 0 ? cells.find((c) => c.index > selected()) : [...cells].reverse().find((c) => c.index < selected())
+      if (next) setSelected(next.index)
     }
     const openPlot = () => {
       const cell = snap()?.cells.find((c) => c.index === selected())
@@ -202,15 +206,18 @@ const plugin: Plugin.Definition = {
           <scrollbox flexGrow={1} ref={(el: any) => (scroll = el)}>
             <For each={snap()?.cells ?? []}>
               {(cell) => (
-                <box id={`nb-cell-${cell.index}`} paddingTop={1} onMouseUp={() => setSelected(cell.index)}>
-                  <text
-                    fg={cell.index === selected() ? (theme.text.action.primary.selected ?? theme.text.action.primary.base) : statusColor(cell)}
-                    bg={cell.index === selected() ? theme.background.raised.high : undefined}
-                  >
-                    {`${cell.index === selected() ? "▸" : " "}${cell.marked ? "●" : " "}`}
-                    {cell.kind === "markdown" ? <b>{`     ${cell.title ?? ""}`}</b> : `${`[${cell.count ?? " "}]`.padStart(4)} ${ICON[cell.status]} ${cell.label}`}
-                    {cell.stale ? "  (edited since run)" : ""}
-                  </text>
+                <box id={`nb-cell-${cell.index}`} paddingTop={1} onMouseUp={() => selectable().includes(cell) && setSelected(cell.index)}>
+                  {/* a text cell without a title shows only its text */}
+                  <Show when={cell.kind === "code" || cell.title || cell.marked || cell.index === selected()}>
+                    <text
+                      fg={cell.index === selected() ? (theme.text.action.primary.selected ?? theme.text.action.primary.base) : statusColor(cell)}
+                      bg={cell.index === selected() ? theme.background.raised.high : undefined}
+                    >
+                      {`${cell.index === selected() ? "▸" : " "}${cell.marked ? "●" : " "}`}
+                      {cell.kind === "markdown" ? <b>{`     ${cell.title ?? ""}`}</b> : `${`[${cell.count ?? " "}]`.padStart(4)} ${ICON[cell.status]} ${cell.label}`}
+                      {cell.stale ? "  (edited since run)" : ""}
+                    </text>
+                  </Show>
                   {/* text cells in full; code (the input) for every cell, all of it when selected.
                       The indent is padding, not spaces, so a wrapped line stays indented. */}
                   <Show when={cell.kind === "markdown"}>
