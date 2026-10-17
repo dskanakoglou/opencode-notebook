@@ -14,6 +14,9 @@ import { plotMode, terminalLine, type Capabilities } from "./src/terminal.ts"
 const PANEL = "notebook"
 const ICON: Record<string, string> = { idle: " ", queued: "…", running: "◐", ok: "✓", error: "✗", cancelled: "-" }
 const MAX_OUTPUT_LINES = 12
+// key hints: running on the first line, everything else on the second
+const RUN_KEYS: [string, string][] = [["enter", "run, next"], ["r", "run"], ["a", "run all"], ["space", "show to agent"]]
+const MOVE_KEYS: [string, string][] = [["↑↓", "move"], ["pgup/pgdn", "scroll"], ["k", "restart Python"], ["ctrl+x ←", "chat"], ["esc", "close"]]
 const MAX_CODE_LINES = 6
 const PLOT_ROWS = 18
 // mid-tone colours that read on dark and light themes; white, black and gray follow the theme
@@ -267,14 +270,40 @@ const plugin: Plugin.Definition = {
               )}
             </For>
           </scrollbox>
-          <box flexShrink={0}>
-            <text fg={theme.text.muted}>
-              {focused() ? "↑↓ cell · r run · a all · space mark · i stop · k restart · o plot · esc close" : "ctrl+x → to use the notebook keys"}
+          {/* the key hints on a band, keys in the accent colour */}
+          <box flexShrink={0} backgroundColor={theme.background.raised.high} paddingLeft={1} paddingRight={1}>
+            <text>
+              <For each={hints(focused() ? runKeys() : [["ctrl+x →", "to use the notebook keys"]])}>{(h) => <span style={{ fg: h.fg }}>{h.text}</span>}</For>
             </text>
-            <text fg={theme.text.muted}>{[focused() ? "pgup/pgdn scroll · ctrl+x ← chat" : "", snap()?.ipynb ? `saved: ${snap()!.ipynb}` : ""].filter(Boolean).join(" · ")}</text>
+            <text>
+              <For each={hints(focused() ? moveKeys() : [], snap()?.ipynb ? `saved: ${snap()!.ipynb}` : "")}>{(h) => <span style={{ fg: h.fg }}>{h.text}</span>}</For>
+            </text>
           </box>
         </box>
       )
+    }
+
+    // "stop" only while something runs, "open plot" only when the selected cell has one
+    function runKeys(): [string, string][] {
+      const busy = snap()?.cells.some((c) => c.status === "running" || c.status === "queued")
+      return busy ? [...RUN_KEYS, ["i", "stop"]] : RUN_KEYS
+    }
+    function moveKeys(): [string, string][] {
+      const plot = snap()?.cells.find((c) => c.index === selected())?.outputs.some((o) => o.kind === "image")
+      return plot ? [["o", "open plot"], ...MOVE_KEYS] : MOVE_KEYS
+    }
+
+    /** Key hints as coloured pieces: the key in the accent colour, what it does in the text colour. */
+    function hints(keys: [string, string][], note = ""): { text: string; fg: any }[] {
+      const theme = ctx.theme
+      const accent = theme.text.action.primary.selected ?? theme.text.action.primary.base
+      const out: { text: string; fg: any }[] = []
+      keys.forEach(([key, what], i) => {
+        if (i) out.push({ text: " · ", fg: theme.text.muted })
+        out.push({ text: key, fg: accent }, { text: ` ${what}`, fg: theme.text.base })
+      })
+      if (note) out.push({ text: out.length ? ` · ${note}` : note, fg: theme.text.muted })
+      return out
     }
 
     function codeLines(source: string, full: boolean): string[] {

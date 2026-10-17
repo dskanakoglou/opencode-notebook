@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.7
+
+- The key hints at the foot of the panel sit on a band one step above the
+  panel background, with the keys in the accent colour.
+- The hints say what each key does: `enter run, next · r run · a run all ·
+  space show to agent` on the first line, moving and the rest on the second.
+  `i stop` appears only while a cell runs, and `o open plot` only when the
+  selected cell has a plot.
+
 ## 0.1.6
 
 - The arrow keys, Enter and mouse clicks select only cells that can run;
