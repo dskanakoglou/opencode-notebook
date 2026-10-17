@@ -8,6 +8,7 @@ import type { Plugin } from "@opencode/plugin/tui"
 import type { Snapshot } from "./src/notebooks.ts"
 import { NOTEBOOK_RPC } from "./src/rpc.ts"
 import { textLines } from "./src/cells.ts"
+import { ansiLines, type AnsiColor, type Segment } from "./src/ansi.ts"
 import { plotMode, terminalLine, type Capabilities } from "./src/terminal.ts"
 
 const PANEL = "notebook"
@@ -15,6 +16,15 @@ const ICON: Record<string, string> = { idle: " ", queued: "…", running: "◐",
 const MAX_OUTPUT_LINES = 12
 const MAX_CODE_LINES = 6
 const PLOT_ROWS = 18
+// mid-tone colours that read on dark and light themes; white, black and gray follow the theme
+const ANSI: Partial<Record<AnsiColor, string>> = {
+  red: "#e5534b",
+  green: "#57ab5a",
+  yellow: "#c69026",
+  blue: "#539bf5",
+  magenta: "#b083f0",
+  cyan: "#39c5cf",
+}
 
 type Cell = Snapshot["cells"][number]
 
@@ -217,8 +227,24 @@ const plugin: Plugin.Definition = {
                     {(out) => (
                       <>
                         <box paddingLeft={7} flexShrink={0}>
-                          <For each={clipLines(out.kind === "image" && !pixels() ? `${out.text} · o opens it` : out.text, cell.index === selected())}>
-                            {(line) => <text fg={out.kind === "error" ? theme.text.feedback.error.base : theme.text.base}>{line}</text>}
+                          <For each={clipSegments(out.kind === "image" && !pixels() ? `${out.text} · o opens it` : out.text, cell.index === selected())}>
+                            {(line) => (
+                              <text fg={out.kind === "error" ? theme.text.feedback.error.base : theme.text.base}>
+                                <For each={line}>
+                                  {(seg) => (
+                                    <span
+                                      style={{
+                                        fg: seg.color === "gray" ? theme.text.muted : seg.color ? ANSI[seg.color] : undefined,
+                                        bold: seg.bold,
+                                        dim: seg.dim,
+                                      }}
+                                    >
+                                      {seg.text.replace(/\u001b/g, "")}
+                                    </span>
+                                  )}
+                                </For>
+                              </text>
+                            )}
                           </For>
                         </box>
                         {/* only where the terminal draws real pixels; coloured blocks are too coarse for a plot */}
@@ -251,10 +277,20 @@ const plugin: Plugin.Definition = {
     }
 
     // the selected cell shows its whole output; the others their first lines
-    function clipLines(text: string, full = false): string[] {
-      const lines = text.split("\n")
+    /**
+     * Output lines as coloured segments. Unless the cell is selected, a long
+     * output shows its start and its end, where results usually are.
+     */
+    function clipSegments(text: string, full = false): Segment[][] {
+      const lines = ansiLines(text)
       if (full || lines.length <= MAX_OUTPUT_LINES) return lines
-      return [...lines.slice(0, MAX_OUTPUT_LINES - 1), `… ${lines.length - MAX_OUTPUT_LINES + 1} more lines (select the cell to see them all)`]
+      const head = Math.floor((MAX_OUTPUT_LINES - 1) / 3)
+      const tail = MAX_OUTPUT_LINES - 1 - head
+      return [
+        ...lines.slice(0, head),
+        [{ text: `… ${lines.length - head - tail} more lines (select the cell to see them all) …`, color: "gray" }],
+        ...lines.slice(-tail),
+      ]
     }
   },
 }

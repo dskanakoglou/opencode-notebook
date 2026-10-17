@@ -162,11 +162,14 @@ function asText(value: unknown): string {
   return typeof value === "string" ? value : ""
 }
 
-/** Text for one output: printed text, the plain-text result, or the error. `image` names a saved plot. */
-export function outputText(output: Output, image?: string): string {
+/**
+ * Text for one output: printed text, the plain-text result, or the error. `image` names a saved plot.
+ * `colours` keeps the colour codes in printed text, for the panel; the agent gets plain text.
+ */
+export function outputText(output: Output, image?: string, colours = false): string {
   switch (output.output_type) {
     case "stream":
-      return stripAnsi(output.text)
+      return colours ? output.text : stripAnsi(output.text)
     case "error": {
       const trace = output.traceback.map(stripAnsi).join("\n").split("\n").filter((l) => l.trim() && !/^-{5,}/.test(l.trim()))
       const last = `${output.ename}: ${output.evalue}`.replace(/: $/, ":")

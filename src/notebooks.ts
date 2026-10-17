@@ -172,7 +172,7 @@ export class Notebooks {
           marked: e.marked.has(cell.index),
           outputs: (r?.outputs ?? []).map((o, i) => ({
             kind: o.output_type === "error" ? ("error" as const) : r!.images[i] ? ("image" as const) : ("text" as const),
-            text: clip(outputText(o, r!.images[i]).replace(/\n+$/, ""), 20000),
+            text: clip(outputText(o, r!.images[i], true).replace(/\n+$/, ""), 20000),
             path: r!.images[i],
           })),
         }

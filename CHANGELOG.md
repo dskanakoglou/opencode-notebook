@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.4
+
+- Outputs show terminal colours and bold (ANSI codes), so a notebook can make
+  its question and answer stand out; Python errors keep their colours too. The
+  agent's `notebook_read` still gets plain text.
+- A long output shows its start and its end until the cell is selected, so
+  the result at the bottom stays in view.
+
 ## 0.1.3
 
 - Text cells wrap to the panel's width: the lines of a paragraph are joined,
