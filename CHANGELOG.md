@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3
+
+- Text cells wrap to the panel's width: the lines of a paragraph are joined,
+  as Markdown does, and a wrapped line keeps its indent. Code and output lines
+  keep their indent when they wrap, too.
+- A text cell's title is shown in bold, without the `md` label.
+
 ## 0.1.2
 
 - Text cells (`# %% [markdown]`) are shown in full in the panel, so a

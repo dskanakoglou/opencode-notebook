@@ -29,6 +29,38 @@ const MARKER = /^# ?%%(.*)$/
 const SCRIPT_START = /^# \/\/\/ script\s*$/
 const SCRIPT_END = /^# \/\/\/\s*$/
 
+/**
+ * A text cell's lines for the panel. Lines of one paragraph are joined, as
+ * Markdown does, so the panel wraps them to its width instead of breaking
+ * each source line on its own. Headings, list items, tables, quotes, code and
+ * blank lines keep their own lines.
+ */
+export function textLines(source: string): string[] {
+  const out: string[] = []
+  let fence = false
+  let open = false // the last line is a paragraph or list item that a plain line continues
+  for (const line of source.split("\n")) {
+    const t = line.trim()
+    if (/^(```|~~~)/.test(t)) {
+      fence = !fence
+      out.push(line)
+      open = false
+    } else if (fence || t === "" || /^(#|\||>)/.test(t) || /^ {4}/.test(line)) {
+      out.push(line)
+      open = false
+    } else if (/^([-*+]|\d+[.)])\s/.test(t)) {
+      out.push(line)
+      open = true
+    } else if (open) {
+      out[out.length - 1] += ` ${t}`
+    } else {
+      out.push(line)
+      open = true
+    }
+  }
+  return out
+}
+
 /** Packages listed under `dependencies` in a PEP 723 `# /// script` block. */
 export function parseDependencies(text: string): string[] {
   const lines = text.split(/\r?\n/)

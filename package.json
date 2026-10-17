@@ -1,6 +1,6 @@
 {
   "name": "opencode-notebook",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "OpenCode v2 notebook panel: run Python notebook cells beside the chat, with one live kernel shared by you and the agent",
   "type": "module",
   "license": "MIT",

@@ -41,7 +41,7 @@ Clone a release into a project's `.opencode/plugins/` folder; OpenCode loads
 plugins from there by itself:
 
 ```bash
-git -c advice.detachedHead=false clone -q --depth 1 --branch v0.1.2 https://github.com/dskanakoglou/opencode-notebook .opencode/plugins/opencode-notebook
+git -c advice.detachedHead=false clone -q --depth 1 --branch v0.1.3 https://github.com/dskanakoglou/opencode-notebook .opencode/plugins/opencode-notebook
 ```
 
 For every project, clone it anywhere and list the folder in your global
@@ -55,7 +55,7 @@ Restart OpenCode afterwards. Nothing needs building or `npm install`; OpenCode
 compiles the plugin itself.
 
 **Not with a `github:` entry for now.** On OpenCode 2.0.29 a plugin installed
-as `"github:dskanakoglou/opencode-notebook#v0.1.2"` loads, but its panel is
+as `"github:dskanakoglou/opencode-notebook#v0.1.3"` loads, but its panel is
 drawn once and never updates. Loaded from a folder it works.
 
 The first notebook you run downloads Jupyter's kernel packages and the ones the

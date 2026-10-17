@@ -7,6 +7,7 @@ import { createSignal, For, onCleanup, Show } from "solid-js"
 import type { Plugin } from "@opencode/plugin/tui"
 import type { Snapshot } from "./src/notebooks.ts"
 import { NOTEBOOK_RPC } from "./src/rpc.ts"
+import { textLines } from "./src/cells.ts"
 import { plotMode, terminalLine, type Capabilities } from "./src/terminal.ts"
 
 const PANEL = "notebook"
@@ -196,21 +197,30 @@ const plugin: Plugin.Definition = {
                     fg={cell.index === selected() ? (theme.text.action.primary.selected ?? theme.text.action.primary.base) : statusColor(cell)}
                     bg={cell.index === selected() ? theme.background.raised.high : undefined}
                   >
-                    {`${cell.index === selected() ? "▸" : " "}${cell.marked ? "●" : " "}${cell.kind === "markdown" ? `  md ${cell.title ?? ""}` : `${`[${cell.count ?? " "}]`.padStart(4)} ${ICON[cell.status]} ${cell.label}`}${cell.stale ? "  (edited since run)" : ""}`}
+                    {`${cell.index === selected() ? "▸" : " "}${cell.marked ? "●" : " "}`}
+                    {cell.kind === "markdown" ? <b>{`     ${cell.title ?? ""}`}</b> : `${`[${cell.count ?? " "}]`.padStart(4)} ${ICON[cell.status]} ${cell.label}`}
+                    {cell.stale ? "  (edited since run)" : ""}
                   </text>
-                  {/* text cells in full; code (the input) for every cell, all of it when selected */}
+                  {/* text cells in full; code (the input) for every cell, all of it when selected.
+                      The indent is padding, not spaces, so a wrapped line stays indented. */}
                   <Show when={cell.kind === "markdown"}>
-                    <For each={cell.source.split("\n")}>{(line) => <text fg={theme.text.base}>{`       ${line}`}</text>}</For>
+                    <box paddingLeft={7} flexShrink={0}>
+                      <For each={textLines(cell.source)}>{(line) => <text fg={theme.text.base}>{line}</text>}</For>
+                    </box>
                   </Show>
                   <Show when={cell.kind === "code"}>
-                    <For each={codeLines(cell.source, cell.index === selected())}>{(line) => <text fg={theme.text.muted}>{`       │ ${line}`}</text>}</For>
+                    <box paddingLeft={7} flexShrink={0}>
+                      <For each={codeLines(cell.source, cell.index === selected())}>{(line) => <text fg={theme.text.muted}>{`│ ${line}`}</text>}</For>
+                    </box>
                   </Show>
                   <For each={cell.outputs}>
                     {(out) => (
                       <>
-                        <For each={clipLines(out.kind === "image" && !pixels() ? `${out.text} · o opens it` : out.text, cell.index === selected())}>
-                          {(line) => <text fg={out.kind === "error" ? theme.text.feedback.error.base : theme.text.base}>{`       ${line}`}</text>}
-                        </For>
+                        <box paddingLeft={7} flexShrink={0}>
+                          <For each={clipLines(out.kind === "image" && !pixels() ? `${out.text} · o opens it` : out.text, cell.index === selected())}>
+                            {(line) => <text fg={out.kind === "error" ? theme.text.feedback.error.base : theme.text.base}>{line}</text>}
+                          </For>
+                        </box>
                         {/* only where the terminal draws real pixels; coloured blocks are too coarse for a plot */}
                         <Show when={out.kind === "image" && out.path && pixels()}>
                           <box paddingLeft={7} flexShrink={0}>

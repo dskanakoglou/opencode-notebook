@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { cellLabel, clip, outputText, overview, parseDependencies, parseNotebook, readReport, report, sourceHash, toIpynb } from "../src/cells.ts"
+import { cellLabel, clip, outputText, overview, parseDependencies, parseNotebook, readReport, report, sourceHash, textLines, toIpynb } from "../src/cells.ts"
 
 const SCRIPT = `# /// script
 # dependencies = [
@@ -141,4 +141,22 @@ test("overview lists cells without outputs and explains marking", () => {
   assert.ok(text.includes("None are marked"))
   assert.ok(text.includes("[1] ok · Load"))
   assert.ok(text.includes("[3] not run · df.isna().sum()"))
+})
+
+test("text cells: paragraph lines are joined, everything else keeps its line", () => {
+  const source = ["First line of a", "paragraph.", "", "- a list item", "  that goes on", "- another", "", "## Heading", "| a | b |", "```", "code stays", "as is", "```", "Last."].join("\n")
+  assert.deepEqual(textLines(source), [
+    "First line of a paragraph.",
+    "",
+    "- a list item that goes on",
+    "- another",
+    "",
+    "## Heading",
+    "| a | b |",
+    "```",
+    "code stays",
+    "as is",
+    "```",
+    "Last.",
+  ])
 })
