@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.5
+
+- `/notebook` is described as "Open a notebook next to the chat" in the command
+  list, and opening a file that is not a `.py` file says so in plain words.
+
 ## 0.1.4
 
 - Outputs show terminal colours and bold (ANSI codes), so a notebook can make

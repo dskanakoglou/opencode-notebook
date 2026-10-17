@@ -82,7 +82,7 @@ export class Notebooks {
     const abs = resolve(this.root, path)
     const rel = relative(this.root, abs)
     if (!rel || rel.startsWith("..") || isAbsolute(rel)) throw new PathError(`${path} is outside the project`)
-    if (extname(abs) !== ".py") throw new PathError(`${path} is not a .py notebook (cells start with "# %%")`)
+    if (extname(abs) !== ".py") throw new PathError(`${path} is not a notebook: a notebook is a .py file`)
     if (roots?.length && !roots.some((r) => rel === r || rel.startsWith(r.replace(/\/+$/, "") + sep)))
       throw new PathError(`notebooks can only be run under ${roots.join(", ")}; ${rel} is not`)
     return { abs, rel: rel.split(sep).join("/") }

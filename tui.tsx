@@ -120,7 +120,7 @@ const plugin: Plugin.Definition = {
             {
               id: "notebook.open",
               title: "Notebook panel",
-              description: "Show a # %% notebook and run its cells",
+              description: "Open a notebook next to the chat",
               group: "Notebook",
               palette: true,
               slash: { name: "notebook", arguments: true },
