@@ -26,11 +26,8 @@ that failed; cell 2 is marked for it to read.*
   cells.
 - **Saved as you go**: after every run, `analysis.ipynb` with all outputs, for
   Jupyter or VS Code, and every plot as a PNG in `analysis_files/`.
-- **Plots**: `o` opens the selected cell's plot in your image viewer. In
-  terminals that report Kitty or Sixel graphics (Ghostty, kitty, WezTerm,
-  iTerm2, VS Code with *Terminal › Integrated: Enable Images*) the panel also
-  draws it inline. The top of the panel says which terminal you are in and
-  which of the two you get.
+- **Plots**: a cell with a plot is marked `▣ plot`, its output names the saved
+  PNG, and `o` opens it in your image viewer.
 
 Works with OpenCode **2.0.29 or later**. Needs [uv](https://docs.astral.sh/uv/),
 which starts the kernel with the packages each notebook asks for.
@@ -165,8 +162,7 @@ is never overwritten (it writes `analysis.opencode.ipynb` instead).
 - Python only. Cells are edited as a file, not typed into the panel.
 - Marks are by cell number: if cells are added above a marked one, the mark
   stays on the number.
-- Inline plots have not yet been tried in a terminal with Kitty or Sixel
-  graphics; `o` works everywhere.
+- Plots are not drawn inside the panel; `o` opens them in your image viewer.
 - Not yet tried on Windows.
 
 ## Development

@@ -9,7 +9,6 @@ import type { Snapshot } from "./src/notebooks.ts"
 import { NOTEBOOK_RPC } from "./src/rpc.ts"
 import { textLines } from "./src/cells.ts"
 import { ansiLines, type AnsiColor, type Segment } from "./src/ansi.ts"
-import { plotMode, terminalLine, type Capabilities } from "./src/terminal.ts"
 
 const PANEL = "notebook"
 const ICON: Record<string, string> = { idle: " ", queued: "…", running: "◐", ok: "✓", error: "✗", cancelled: "-" }
@@ -18,7 +17,6 @@ const MAX_OUTPUT_LINES = 12
 const RUN_KEYS: [string, string][] = [["enter", "run, next"], ["r", "run"], ["a", "run all"], ["space", "show to agent"]]
 const MOVE_KEYS: [string, string][] = [["↑↓", "move"], ["pgup/pgdn", "scroll"], ["k", "restart Python"], ["ctrl+x ←", "chat"], ["esc", "close"]]
 const MAX_CODE_LINES = 6
-const PLOT_ROWS = 18
 // mid-tone colours that read on dark and light themes; white, black and gray follow the theme
 const ANSI: Partial<Record<AnsiColor, string>> = {
   red: "#e5534b",
@@ -150,11 +148,6 @@ const plugin: Plugin.Definition = {
 
     function NotebookPanel(props: { input: { focused: boolean; focus: () => void; width: number } }) {
       const theme = ctx.theme
-      // what OpenTUI learned from the terminal at startup
-      const caps = () => (ctx.renderer as any).capabilities as Capabilities | null
-      const hasResolution = () => !!(ctx.renderer as any).resolution
-      const pixels = () => plotMode(caps(), hasResolution()) !== "file"
-      const plotWidth = () => Math.max(20, Math.min(props.input.width - 10, 90))
       const focused = () => props.input.focused
       let scroll: any
       ctx.keymap.layer(() => ({
@@ -201,7 +194,6 @@ const plugin: Plugin.Definition = {
               <b>{`Notebook · ${path() ?? ""}`}</b>
             </text>
             <text fg={snap()?.kernel.state === "failed" ? theme.text.feedback.error.base : theme.text.muted}>{kernelLine()}</text>
-            <text fg={theme.text.muted}>{terminalLine(caps(), hasResolution(), process.env)}</text>
             <Show when={error()}>
               <text fg={theme.text.feedback.error.base}>{error()}</text>
             </Show>
@@ -218,6 +210,7 @@ const plugin: Plugin.Definition = {
                     >
                       {`${cell.index === selected() ? "▸" : " "}${cell.marked ? "●" : " "}`}
                       {cell.kind === "markdown" ? <b>{`     ${cell.title ?? ""}`}</b> : `${`[${cell.count ?? " "}]`.padStart(4)} ${ICON[cell.status]} ${cell.label}`}
+                      {cell.outputs.some((o) => o.kind === "image") ? "  ▣ plot" : ""}
                       {cell.stale ? "  (edited since run)" : ""}
                     </text>
                   </Show>
@@ -237,9 +230,10 @@ const plugin: Plugin.Definition = {
                     {(out) => (
                       <>
                         <box paddingLeft={7} flexShrink={0}>
-                          <For each={clipSegments(out.kind === "image" && !pixels() ? `${out.text} · o opens it` : out.text, cell.index === selected())}>
+                          {/* plots are files: o opens the selected cell's plot in the system viewer */}
+                          <For each={clipSegments(out.kind === "image" ? `${out.text} · o opens it` : out.text, cell.index === selected())}>
                             {(line) => (
-                              <text fg={out.kind === "error" ? theme.text.feedback.error.base : theme.text.base}>
+                              <text fg={out.kind === "error" ? theme.text.feedback.error.base : out.kind === "image" ? (theme.text.action.primary.selected ?? theme.text.action.primary.base) : theme.text.base}>
                                 <For each={line}>
                                   {(seg) => (
                                     <span
@@ -257,12 +251,6 @@ const plugin: Plugin.Definition = {
                             )}
                           </For>
                         </box>
-                        {/* only where the terminal draws real pixels; coloured blocks are too coarse for a plot */}
-                        <Show when={out.kind === "image" && out.path && pixels()}>
-                          <box paddingLeft={7} flexShrink={0}>
-                            <image source={resolve(ctx.location?.directory ?? process.cwd(), out.path!)} fit="fit" width={plotWidth()} height={PLOT_ROWS} protocol={plotMode(caps(), hasResolution()) === "kitty" ? "kitty" : "sixel"} />
-                          </box>
-                        </Show>
                       </>
                     )}
                   </For>

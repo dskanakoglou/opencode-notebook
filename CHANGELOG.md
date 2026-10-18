@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.8
+
+- Plots are no longer drawn inside the panel: in iTerm2 the image ended up
+  behind the panel's background and showed as an empty grey box. A cell with a
+  plot is marked `▣ plot`, its output line ends in `o opens it`, and `o` opens
+  it in your image viewer.
+- The line naming the terminal is gone with it.
+
 ## 0.1.7
 
 - The key hints at the foot of the panel sit on a band one step above the
