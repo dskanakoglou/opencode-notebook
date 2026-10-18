@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.9
+
+- **Fixed:** a kernel no longer runs on after you are done. OpenCode 2 keeps
+  its server running in the background after the chat window closes, so a
+  kernel used to live until that service stopped. Now a kernel nobody has
+  used for 60 minutes is stopped, and one whose notebook file is gone (moved,
+  renamed or deleted) is stopped at once. Outputs stay; the panel says why the
+  kernel stopped, and the next run starts a fresh one.
+
 ## 0.1.8
 
 - Plots are no longer drawn inside the panel: in iTerm2 the image ended up

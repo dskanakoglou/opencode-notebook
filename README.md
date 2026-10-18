@@ -38,7 +38,7 @@ Clone a release into a project's `.opencode/plugins/` folder; OpenCode loads
 plugins from there by itself:
 
 ```bash
-git -c advice.detachedHead=false clone -q --depth 1 --branch v0.1.8 https://github.com/dskanakoglou/opencode-notebook .opencode/plugins/opencode-notebook
+git -c advice.detachedHead=false clone -q --depth 1 --branch v0.1.9 https://github.com/dskanakoglou/opencode-notebook .opencode/plugins/opencode-notebook
 ```
 
 For every project, clone it anywhere and list the folder in your global

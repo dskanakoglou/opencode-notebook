@@ -44,6 +44,8 @@ interface Entry {
   ipynb?: string
   /** Cells the user marked in the panel for the agent to read. */
   marked: Set<number>
+  /** When a cell last ran or was queued, for stopping kernels nobody uses. */
+  lastUsed: number
 }
 
 /** What the panel shows; plain JSON so it can cross RPC. */
@@ -67,14 +69,43 @@ export interface Snapshot {
 
 export class PathError extends Error {}
 
+/** A kernel nobody has used for this long is stopped (OpenCode's server can outlive the chat window). */
+export const IDLE_MS = 60 * 60_000
+
 export class Notebooks {
   readonly root: string
   private readonly changed: (path: string) => void
   private entries = new Map<string, Entry>()
+  private readonly idleMs: number
+  private readonly sweeper: ReturnType<typeof setInterval>
 
-  constructor(root: string, changed: (path: string) => void) {
+  constructor(root: string, changed: (path: string) => void, idleMs = IDLE_MS) {
     this.root = root
     this.changed = changed
+    this.idleMs = idleMs
+    // check every minute; unref, so the timer alone never keeps OpenCode running
+    this.sweeper = setInterval(() => this.sweep(), 60_000)
+    this.sweeper.unref?.()
+  }
+
+  /**
+   * Stops kernels that are not working: unused for `idleMs`, or whose notebook file is
+   * gone. Outputs stay; the next run starts a fresh kernel, as after a restart.
+   */
+  sweep(now = Date.now()) {
+    for (const e of this.entries.values()) {
+      if (!e.kernel || e.kernelState === "busy" || e.kernelState === "starting") continue
+      if ([...e.results.values()].some((r) => r.status === "queued" || r.status === "running")) continue
+      const gone = !existsSync(e.abs)
+      if (!gone && now - e.lastUsed < this.idleMs) continue
+      e.kernel.shutdown()
+      e.kernel = undefined
+      e.kernelState = "off"
+      e.kernelMessage = gone
+        ? "stopped: the notebook file is gone"
+        : `stopped after ${Math.round(this.idleMs / 60_000)} min without use; run the cells again from the top`
+      this.changed(e.rel)
+    }
   }
 
   /** Resolves a project-relative or absolute path; it must be a .py file inside the project. */
@@ -95,7 +126,7 @@ export class Notebooks {
     const mtime = statSync(abs).mtimeMs
     let entry = this.entries.get(rel)
     if (!entry) {
-      entry = { rel, abs, notebook: parseNotebook(readFileSync(abs, "utf8")), mtime, kernelState: "off", results: new Map(), queue: Promise.resolve(), generation: 0, marked: new Set() }
+      entry = { rel, abs, notebook: parseNotebook(readFileSync(abs, "utf8")), mtime, kernelState: "off", results: new Map(), queue: Promise.resolve(), generation: 0, marked: new Set(), lastUsed: Date.now() }
       this.entries.set(rel, entry)
     } else if (entry.mtime !== mtime) {
       entry.notebook = parseNotebook(readFileSync(abs, "utf8"))
@@ -188,6 +219,7 @@ export class Notebooks {
     const e = this.load(path, roots)
     const wanted = this.pick(e, cells)
     const generation = e.generation
+    e.lastUsed = Date.now()
     for (const cell of wanted) this.set(e, cell, { status: "queued" })
     this.changed(e.rel)
     const job = e.queue.then(() => this.runCells(e, wanted, generation))
@@ -239,6 +271,7 @@ export class Notebooks {
       result.status = done.status
       result.count = done.count
       e.kernelState = kernel.alive ? "idle" : "failed"
+      e.lastUsed = Date.now()
       ran.push({ cell, status: done.status, outputs: result.outputs, images: result.images })
       this.writeIpynb(e)
       this.changed(e.rel)
@@ -299,6 +332,7 @@ export class Notebooks {
   }
 
   dispose() {
+    clearInterval(this.sweeper)
     for (const e of this.entries.values()) e.kernel?.shutdown()
     this.entries.clear()
   }
