@@ -175,7 +175,3 @@ npm run check   # type check
 
 Point a test project's `opencode.json` at your working copy:
 `{ "plugins": ["/absolute/path/to/opencode-notebook"] }`.
-
-## License
-
-MIT
