@@ -1,5 +1,13 @@
 # opencode-notebook
 
+<!-- badges: start -->
+[![Tests on Linux](https://img.shields.io/github/check-runs/dskanakoglou/opencode-notebook/main?nameFilter=tests%20%28ubuntu-latest%29&label=tests%20Linux)](https://github.com/dskanakoglou/opencode-notebook/actions/workflows/tests.yml)
+[![Tests on Windows](https://img.shields.io/github/check-runs/dskanakoglou/opencode-notebook/main?nameFilter=tests%20%28windows-latest%29&label=tests%20Windows)](https://github.com/dskanakoglou/opencode-notebook/actions/workflows/tests.yml)
+[![Tests on macOS](https://img.shields.io/github/check-runs/dskanakoglou/opencode-notebook/main?nameFilter=tests%20%28macos-latest%29&label=tests%20macOS)](https://github.com/dskanakoglou/opencode-notebook/actions/workflows/tests.yml)
+[![Release](https://img.shields.io/github/v/release/dskanakoglou/opencode-notebook)](https://github.com/dskanakoglou/opencode-notebook/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+<!-- badges: end -->
+
 A Jupyter-style notebook inside [OpenCode](https://opencode.ai). The notebook
 opens in a panel next to the chat, and you run its cells there with a key. The
 agent uses the same live Python kernel: it can run cells, and read the cells you
